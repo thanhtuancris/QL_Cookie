@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 async function connect(){
     try{
-        await mongoose.connect('mongodb://adminITVN:ITVNadmin123;;@66.42.59.118:27017/QLCookie?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&ssl=false', {
+        await mongoose.connect('mongodb://admin:admin123456@127.0.0.1:27017/QL_Cookie?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false', {
             useNewUrlParser: true,
             useUnifiedTopology: true,
             useFindAndModify: false,
