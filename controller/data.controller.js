@@ -18,7 +18,7 @@ module.exports = {
                 dateTime: new Date()
             })
             let check = await Data.findOne({
-                cookie: cookie
+                cookie: req.body.cookie.trim()
             });
             if(check !== null){
                 res.status(400).json({
@@ -162,6 +162,7 @@ module.exports = {
                 // let check = await Data.findOne(filter)
                 let update = {
                     isalive: (req.body.isalive) ? req.body.isalive : check.isalive,
+                    note: (req.body.note) ? req.body.note : check.note,
                 }
                 let rsUpdate = await Data.findOneAndUpdate(filter, update)
                 if(rsUpdate){
@@ -184,7 +185,28 @@ module.exports = {
             })
         }
     }, 
-    importFile: async function(req, res){
-
+    importManyCookie: async function(req, res){
+        try{
+            let check = await Account.findOne({
+                token: req.body.token,
+                isdelete: false,
+                status: true,
+                role: 10
+            });
+            if(check){
+                let arr = req.body.cookie
+                for (let i = 0; i < arr.length; i++) {
+                    
+                }
+            }else{
+                res.status(400).json({
+                    message: "Không có quyền thực thi!"
+                })
+            }
+        }catch(ex){
+            res.status(400).json({
+                message: ex.message
+            })
+        }
     }
 }
