@@ -8,7 +8,13 @@ module.exports = {
         }
         if(!req.body.cookie){
             res.status(400).json({
-                message: "Thiếu trường dữ liệu"
+                message: "Thiếu trường dữ liệu cookie"
+            })
+            return
+        }
+         if(!req.body.note){
+            res.status(400).json({
+                message: "Thiếu trường dữ liệu note"
             })
             return
         }
@@ -45,12 +51,45 @@ module.exports = {
             })
             return
         }
+        if(!req.body.idCookie){
+            res.status(400).json({
+                message: "Thiếu trường dữ liệu ID!"
+            })
+            return
+        }
         next()
     },
     import_data: function(req, res, next) {
         if(!req.body.token){
             res.status(400).json({
                 message: "Thiếu trường dữ liệu token!"
+            })
+            return
+        }
+        if(!req.body.note){
+            res.status(400).json({
+                message: "Thiếu trường dữ liệu note!"
+            })
+            return
+        }
+        if(!req.body.cookie){
+            res.status(400).json({
+                message: "Thiếu trường dữ liệu cookie!"
+            })
+            return
+        }
+        next()
+    },
+    delete_many: function(req, res, next) {
+        if(!req.body.token){
+            res.status(400).json({
+                message: "Thiếu trường dữ liệu token!"
+            })
+            return
+        }
+        if(!req.body.idCookie){
+            res.status(400).json({
+                message: "Thiếu trường dữ liệu ID!"
             })
             return
         }

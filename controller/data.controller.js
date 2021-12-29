@@ -69,7 +69,7 @@ module.exports = {
             //     };
             // }
             if(req.body.note){
-                filter.note = new RegExp(req.body.body.trim(), 'i')
+                filter.note = new RegExp(req.body.note.trim(), 'i')
             }
             if(req.body.start_date){
                 let start_date = new Date(req.body.start_date + " 07:00")
@@ -80,7 +80,7 @@ module.exports = {
                     "$lt": stop_date
                 }
             }
-            const perPage = 10;
+            const perPage =  parseInt(req.body.limit || 10);
             const page = parseInt(req.body.page || 1);
             const skip = (perPage * page) - perPage;
             const result = await Data.find(filter).sort({
@@ -91,11 +91,9 @@ module.exports = {
             res.status(200).json({
                 message: "Lấy dữ liệu thành công!",
                 data: result,
-                meta: {
-                    page,
-                    totalData,
-                    totalPage,
-                }
+                page: page,
+                totalData: totalData,
+                totalPage: totalPage,
             })
         }else{
             res.status(400).json({
@@ -226,6 +224,50 @@ module.exports = {
                                 success: arr.length - arrExist.length
                             });
                         }
+                    }
+                }
+            }else{
+                res.status(400).json({
+                    message: "Không có quyền thực thi!"
+                })
+            }
+        }catch(ex){
+            res.status(400).json({
+                message: ex.message
+            })
+        }
+    },
+    deleteMany: async function(req, res){
+        try{
+            let arr = req.body.idCookie
+            let check = await Account.findOne({
+                token: req.body.token,
+                isdelete: false,
+                status: true,
+                role: 10
+            });
+            if(check){
+                for (let i = 0; i < arr.length; i++) {
+                    let update = {
+                        isdelete: true,
+                    };
+                    try {
+                        let filter = {
+                            _id: arr[i],
+                            isdelete: false,
+                        }
+                        let result = await Data.findOneAndUpdate(filter, update, {
+                            new: true
+                        });
+                    } catch (ex) {
+                        res.status(400).json({
+                            message: ex.message,
+                        });
+                    }
+                    if (i + 1 == arr.length) {
+                        res.status(200).json({
+                            message: "Xóa cookie thành công!",
+                        });
                     }
                 }
             }else{
