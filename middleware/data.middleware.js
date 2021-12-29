@@ -46,5 +46,14 @@ module.exports = {
             return
         }
         next()
-    }
+    },
+    import_data: function(req, res, next) {
+        if(!req.body.token){
+            res.status(400).json({
+                message: "Thiếu trường dữ liệu token!"
+            })
+            return
+        }
+        next()
+    },
 }

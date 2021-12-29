@@ -103,7 +103,6 @@ module.exports = {
             })
         }
     },
-    
     delete_data: async function(req, res){
         try{
             let filterAccount = {
@@ -163,6 +162,7 @@ module.exports = {
                 let update = {
                     isalive: (req.body.isalive) ? req.body.isalive : check.isalive,
                     note: (req.body.note) ? req.body.note : check.note,
+                    cookie: (req.body.cookie) ? req.body.cookie : check.cookie,
                 }
                 let rsUpdate = await Data.findOneAndUpdate(filter, update)
                 if(rsUpdate){
@@ -187,6 +187,7 @@ module.exports = {
     }, 
     importManyCookie: async function(req, res){
         try{
+            let arrExists = []
             let check = await Account.findOne({
                 token: req.body.token,
                 isdelete: false,
@@ -195,8 +196,37 @@ module.exports = {
             });
             if(check){
                 let arr = req.body.cookie
+                let note = req.body.note.trim()
                 for (let i = 0; i < arr.length; i++) {
-                    
+                    let checkCookie = await Data.findOne({
+                        cookie: arr[i],
+                        isdelete: false
+                    })
+                    if(checkCookie == null){
+                        let newCookie = new Data({
+                            cookie: arr[i],
+                            note: note
+                        })
+                        let importCookie = await newCookie.save();
+                        if(i+1 == arr.length){
+                            res.status(200).json({
+                                message: 'Thêm cookie thành công!',
+                                data: arr.length
+                            });
+                        }
+                    }else{
+                        let cookieExists = (cookie[i]) ? cookie[i] + "Trùng cookie" : "null";
+                        arrExists.push(cookieExists)
+                        if(i+1 == arr.length){
+                            res.status(400).json({
+                                message: 'Cookie bị trùng, Hãy thử lại!',
+                                data: arrExists,
+                                totalImport: arr.length,
+                                failed: arrExists.length,
+                                success: arr.length - arrExist.length
+                            });
+                        }
+                    }
                 }
             }else{
                 res.status(400).json({
