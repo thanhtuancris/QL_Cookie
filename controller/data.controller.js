@@ -2,35 +2,25 @@ let Data = require('../model/data')
 let Account = require('../model/account')
 module.exports = {
     add_data: async function(req, res){
-        let checkToken = await Account.findOne({token: req.body.token})
+        let filterAccount = {
+            token: req.body.token,
+            status: true,
+            isdelete: false,
+            role: 10
+        }
+        let checkToken = await Account.findOne(filterAccount)
         if(checkToken !== null){
-            let operation = req.body.operation.trim()
-            let userAgent = req.body.userAgent.trim()
-            let cookie = req.body.cookie.trim()
-            let name = req.body.name.trim()
-            let nation = req.body.nation.trim()
-            let image = req.body.image.trim()
-            let token = req.body.token.trim()
-            let tokenBusiness = req.body.tokenBusiness.trim()
-            let phone = req.body.phone
             let data = Data({
-                name: name,
-                nation: nation,
-                image: image,
-                token: token,
-                tokenBusiness: tokenBusiness,
-                phone: phone,
-                operation: operation,
-                userAgent: userAgent,
-                cookie: cookie,
-                isAlive: true,
-                isDelete: false,
+                cookie: req.body.cookie.trim(),
+                note: req.body.note.trim(),
+                isalive: true,
+                isdelete: false,
                 dateTime: new Date()
             })
             let check = await Data.findOne({
-                phone: phone
+                cookie: cookie
             });
-            if(check != null){
+            if(check !== null){
                 res.status(400).json({
                     message: "Dữ liệu đã tồn tại"
                 });
@@ -54,45 +44,16 @@ module.exports = {
         
     },
     get_data: async function(req, res){
-        let checkToken = await Account.findOne({token: req.body.token});
+        let filterAccount = {
+            token: req.body.token,
+            status: true,
+            isdelete: false,
+            role: 10
+        }
+        let checkToken = await Account.findOne(filterAccount);
         if(checkToken !== null){
             let filter = {
-                isDelete: false
-            }
-            if(req.body.operation){
-                filter = {
-                    operation: new RegExp(req.body.operation.trim(), 'i')
-                }
-            }
-            if(req.body.userAgent){
-                filter = {
-                    userAgent: new RegExp(req.body.userAgent.trim(), 'i')
-                }
-            }
-            if(req.body.isDelete == 'true'){
-                filter = {
-                    isDelete: true
-                }
-            }
-            if(req.body.isAlive){
-                filter = {
-                    isAlive: req.body.isAlive
-                }
-            }
-            if(req.body.name){
-                filter = {
-                    name: new RegExp(req.body.name.trim(), 'i')
-                }
-            }
-            if(req.body.nation){
-                filter = {
-                    nation: new RegExp(req.body.name.trim(), 'i')
-                }
-            }
-            if(req.body.phone){
-                filter = {
-                    phone: new RegExp(req.body.phone.trim(), 'i')
-                }
+                isdelete: false
             }
             // if (req.body.start_date && req.body.stop_date) {
             //     var start_date = new Date();
@@ -107,6 +68,18 @@ module.exports = {
             //         "$lte": start_date.toISOString()
             //     };
             // }
+            if(req.body.note){
+                filter.note = new RegExp(req.body.body.trim(), 'i')
+            }
+            if(req.body.start_date){
+                let start_date = new Date(req.body.start_date + " 07:00")
+                let stop_date = new Date(req.body.start_date + " 07:00")
+                stop_date.setDate(start_date.getDate() + 1)
+                filter.dateTime = {
+                    "$gte": start_date,
+                    "$lt": stop_date
+                }
+            }
             const perPage = 10;
             const page = parseInt(req.body.page || 1);
             const skip = (perPage * page) - perPage;
@@ -132,61 +105,86 @@ module.exports = {
     },
     
     delete_data: async function(req, res){
-        let checkToken = await Account.findOne({token: req.body.token})
-        if(checkToken !== null){
-            let filter = {
-                isDelete: false,
-                name: req.body.name
+        try{
+            let filterAccount = {
+                token: req.body.token,
+                status: true,
+                isdelete: false,
+                role: 10
             }
-            let check = await Data.findOne(filter)
-            let update = {
-                isActive: false,
-                isDelete: true
-            }
-            let deleteData = await Data.findOneAndUpdate(filter, update)
-            if(deleteData){
-                res.status(200).json({
-                    message: "Delete dữ liệu thành công"
-                })
+            let checkToken = await Account.findOne(filterAccount)
+            if(checkToken !== null){
+                let filter = {
+                    isdelete: false,
+                    _id: req.body.idCookie
+                }
+                let check = await Data.findOne(filter)
+                let update = {
+                    isalive: false,
+                    isdelete: true
+                }
+                let deleteData = await Data.findOneAndUpdate(filter, update)
+                if(deleteData){
+                    res.status(200).json({
+                        message: "Xóa dữ liệu thành công"
+                    })
+                }else{
+                    res.status(200).json({
+                        message: "Xóa dữ liệu thất bại"
+                    })
+                }
             }else{
-                res.status(200).json({
-                    message: "Delete dữ liệu thất bại"
+                res.status(400).json({
+                    message: "Phiên đăng nhập hết hạn"
                 })
             }
-        }else{
+        }catch(ex){
             res.status(400).json({
-                message: "Phiên đăng nhập hết hạn"
+                message: ex.message
             })
         }
         
     },
     update_data: async function(req, res){
-        let checkToken = await Account.findOne({token: req.body.token})
-        if(checkToken !== null){
-            let filter = {
-                isDelete: false,
-                name: req.body.name
+        try{
+            let filterAccount = {
+                token: req.body.token,
+                status: true,
+                isdelete: false,
+                role: 10
             }
-            let check = await Data.findOne(filter)
-            let update = {
-                isActive: (req.body.isActive) ? req.body.isActive : check.isActive,
-                name: (req.body.name) ? req.body.name: check.name,
-                nation: (req.body.nation) ? req.body.nation: check.nation,
-            }
-            let rsUpdate = await Data.findOneAndUpdate(filter, update)
-            if(rsUpdate){
-                res.status(200).json({
-                    message: "Update dữ liệu thành công"
-                })
+            let checkToken = await Account.findOne(filterAccount)
+            if(checkToken !== null){
+                let filter = {
+                    isdelete: false,
+                    _id: req.body.idCookie
+                }
+                // let check = await Data.findOne(filter)
+                let update = {
+                    isalive: (req.body.isalive) ? req.body.isalive : check.isalive,
+                }
+                let rsUpdate = await Data.findOneAndUpdate(filter, update)
+                if(rsUpdate){
+                    res.status(200).json({
+                        message: "Update dữ liệu thành công"
+                    })
+                }else{
+                    res.status(400).json({
+                        message: "Update dữ liệu thất bại"
+                    })
+                }
             }else{
                 res.status(400).json({
-                    message: "Update dữ liệu thất bại"
+                    message: "Phiên đăng nhập hết hạn"
                 })
             }
-        }else{
+        }catch(ex){
             res.status(400).json({
-                message: "Phiên đăng nhập hết hạn"
+                message: ex.message
             })
         }
+    }, 
+    importFile: async function(req, res){
+
     }
 }

@@ -69,7 +69,7 @@ module.exports = {
         }
     },
     changePassword: async function(req, res){
-        let check = await Admin.findOne({
+        let check = await Account.findOne({
             token: req.body.token,
             isdelete: false,
             status: true,
@@ -93,7 +93,7 @@ module.exports = {
                     date_edit: new Date(),
                     password: md5(newpassword),
                 }
-                let result1 = await Admin.findOneAndUpdate(filter, update, {
+                let result1 = await Account.findOneAndUpdate(filter, update, {
                     new: true
                 });
                 if (result1 != null) {
