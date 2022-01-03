@@ -71,6 +71,9 @@ module.exports = {
             if(req.body.note){
                 filter.note = new RegExp(req.body.note.trim(), 'i')
             }
+            if(req.body.isalive){
+                filter.isalive = req.body.isalive
+            }
             if(req.body.start_date){
                 let start_date = new Date(req.body.start_date + " 07:00")
                 let stop_date = new Date(req.body.start_date + " 07:00")
@@ -203,7 +206,9 @@ module.exports = {
                     if(checkCookie == null){
                         let newCookie = new Data({
                             cookie: arr[i],
-                            note: note
+                            note: note,
+                            isdelete: false,
+                            isalive: true,
                         })
                         let importCookie = await newCookie.save();
                         if(i+1 == arr.length){
@@ -268,6 +273,42 @@ module.exports = {
                         res.status(200).json({
                             message: "Xóa cookie thành công!",
                         });
+                    }
+                }
+            }else{
+                res.status(400).json({
+                    message: "Không có quyền thực thi!"
+                })
+            }
+        }catch(ex){
+            res.status(400).json({
+                message: ex.message
+            })
+        }
+    },
+    getDate: async function(req,res){
+        try{
+            let check = await Account.findOne({
+                token: req.body.token,
+                isdelete: false,
+                status: true,
+                role: 10
+            });
+            if(check){
+                let arr = []
+                let getDate = await Data.find()
+                for(let i = 0; i < getDate.length; i++){
+                    let d = new Date(getDate[i].dateTime)
+                    let month = '' + (d.getMonth() + 1)
+                    let day = '' + d.getDate()
+                    let year = d.getFullYear();
+                    let rs_date = day + "/" + month + "/" + year
+                    arr.push(rs_date)
+                    if(i+1 == getDate.length){
+                        res.status(200).json({
+                            message: "Lấy dữ liệu thành công!",
+                            data: Array.from(new Set(arr))
+                        })
                     }
                 }
             }else{
