@@ -19,6 +19,7 @@ const dataSchema = new mongoose.Schema({
     ip: String,
     nation: String,
     useragent: String,
+    c_user: String
 })
 
 module.exports = mongoose.model("cookies", dataSchema)

