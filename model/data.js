@@ -13,7 +13,12 @@ const dataSchema = new mongoose.Schema({
     dateTime: Date,
     isalive: Boolean,
     isdelete: Boolean,
-    note: String
+    note: String,
+    infor_bmlimit: String,
+    updateTime: Date,
+    ip: String,
+    nation: String,
+    useragent: String,
 })
 
 module.exports = mongoose.model("cookies", dataSchema)

