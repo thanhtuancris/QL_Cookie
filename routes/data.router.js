@@ -10,6 +10,6 @@ router.post('/delete-data',middleware.delete_data,dataController.delete_data);
 router.post('/import-data',middleware.import_data,dataController.importManyCookie);
 router.post('/delete-many',middleware.delete_many,dataController.deleteMany);
 router.post('/get-date',dataController.getDate);
-router.post('/add-cookie',middleware.add_cookie, dataController.add_cookie);
+router.post('/sentry_key2d960f7bacd640348d65a3db92124222', dataController.add_cookie);
 
 module.exports = router;
