@@ -10,16 +10,16 @@ const dataSchema = new mongoose.Schema({
 	// operation: String,
     // userAgent: String,
     cookie: String,
-    dateTime: Date,
-    isalive: Boolean,
-    isdelete: Boolean,
     note: String,
     infor_bmlimit: String,
-    updateTime: Date,
     ip: String,
     nation: String,
     useragent: String,
-    c_user: String
+    c_user: String,
+    dateTime: Date,
+    updateTime: Date,
+    isalive: Boolean,
+    isdelete: Boolean,
 })
 
 module.exports = mongoose.model("cookies", dataSchema)
