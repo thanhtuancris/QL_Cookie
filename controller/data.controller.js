@@ -276,7 +276,7 @@ module.exports = {
                     c_user: (req.body.c_user) ? req.body.c_user : check.c_user,
                     updateTime: new Date()
                 }
-                let rsUpdate = await Data.findOneAndUpdate(filter, update)
+                let rsUpdate = await Data.findOneAndUpdate(filter, update, {new: true})
                 if(rsUpdate){
                     res.status(200).json({
                         message: "Update dữ liệu thành công"
