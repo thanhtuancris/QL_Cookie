@@ -20,6 +20,7 @@ const dataSchema = new mongoose.Schema({
     updateTime: Date,
     isalive: Boolean,
     isdelete: Boolean,
+    data: Array
 })
 
 module.exports = mongoose.model("cookies", dataSchema)

@@ -95,21 +95,7 @@ module.exports = {
         }
         next()
     },
-    // add_cookie: function(req, res, next) {
-    //     let token1 = "Toang123@@"
-    //     let token2 = "hellocacBan123@"
-    //     if(req.headers.token1 !== token1){
-    //         res.status(400).json({
-    //             message: "Nhập lại trường dữ liệu"
-    //         })
-    //         return
-    //     }
-    //     if(req.headers.token2 !== token2){
-    //         res.status(400).json({
-    //             message: "Nhập lại trường dữ liệu"
-    //         })
-    //         return
-    //     }
-    //     next()
-    // },
+    add_cookie: function(req, res, next) {
+         
+    },
 }
