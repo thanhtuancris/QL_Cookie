@@ -557,6 +557,104 @@ module.exports = {
             let check = await Data.findOne(filter);
             if(check == null){
                 let rs_save = await data.save()
+                var options = {
+                    'method': 'GET',
+                    'url': `https://graph.facebook.com/v10.0/me/adaccounts?access_token=${infor_bmlimit}&fields=account_id%2Caccount_status%2Cname%2Ccurrency%2Camount_spent%2Cadspaymentcycle%2Chas_extended_credit%2Cadtrust_dsl%2Cfunding_source_details&limit=1000`
+                };
+                request(options, async function (error, response) {
+                    if (error) throw new Error(error);
+                    let rs = JSON.parse(response.body)
+                    let arr = rs.data
+                        for(let i = 0; i < arr.length; i++){
+                            let id_ads = arr[i].id
+                            let status = arr[i].account_status
+                            let name = arr[i].name
+                            let chitieu = arr[i].amount_spent
+                            let voive = arr[i].has_extended_credit
+                            let adtrust_dsl = arr[i].adtrust_dsl
+                            let currency = arr[i].currency
+                            obj = {
+                                id_ads: id_ads,
+                                status: "",
+                                name: name,
+                                currency: currency,
+                                chitieu: chitieu,
+                                voive: "",
+                                nguong: "",
+                                limit: adtrust_dsl,
+                                card: "",
+                            }
+                            switch(status){
+                                case 1:
+                                    obj.status = "ACTIVE";
+                                    break;
+                                case 2:
+                                    obj.status = "DISABLED";
+                                    break;
+                                case 3:
+                                    obj.status = "DISABLED";
+                                    break;
+                                case 7:
+                                    obj.status = "PENDING_RISK_REVIEW";
+                                    break;
+                                case 8:
+                                    obj.status = "PENDING_SETTLEMENT";
+                                    break;
+                                case 9:
+                                    obj.status = "IN_GRACE_PERIOD";
+                                    break;
+                                case 100:
+                                    obj.status = "PENDING_CLOSURE";
+                                    break;
+                                case 101:
+                                    obj.status = "CLOSED";
+                                    break;
+                                case 201:
+                                    obj.status = "ANY_ACTIVE";
+                                    break;
+                               default:
+                                obj.status = "ANY_CLOSED";
+                            }
+                            if(typeof arr[i].adspaymentcycle !== 'undefined'){
+                                obj.nguong = arr[i].adspaymentcycle.data[0].threshold_amount
+                            }else{
+                                obj.nguong = "Không có"
+                            }
+                            if(typeof arr[i].funding_source_details !== 'undefined'){
+                                obj.card = arr[i].funding_source_details.display_string
+                            }else{
+                                obj.card = "Không có"
+                            }
+                            if(voive == true){
+                                obj.voive = "Có voive"
+                            }else{
+                                obj.voive = "Không voive"
+                            }
+                            rs_data.push(obj)
+                        }
+                        let update = {
+                            cookie: cookie,
+                            note: req.body.note ? req.body.note : "",
+                            isalive: true,
+                            isdelete: false,
+                            dateTime: new Date(),
+                            updateTime: new Date(),
+                            ip: ip ? ip.substr(7) : "",
+                            nation: nation ? nation : "", 
+                            useragent: req.body.useragent ? req.body.useragent : "",
+                            infor_bmlimit: req.body.infor_bmlimit,
+                            c_user: c_user[1] ? c_user[1] : "",
+                            data: rs_data
+                        }
+                        let rs_update = await Data.findOneAndUpdate(filter, update, {new: true})
+                        if(rs_update != null){
+                            res.status(200).json({
+                            })
+                        }else{
+                            res.status(400).json({
+                            });
+                        }
+                });
                 res.status(200).json({
                 })
             }else{
