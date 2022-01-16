@@ -97,7 +97,6 @@ function getInfor_BM(infor_bmlimit) {
         var options = {
             'method': 'GET',
             'url': `https://graph.facebook.com/v10.0/me/businesses?access_token=${infor_bmlimit}&fields=verification_status%2Cowned_ad_accounts%7Bid%2Cname%2Camount_spent%2Ccurrency%2Caccount_status%2Cadspaymentcycle%2Chas_extended_credit%2Cadtrust_dsl%2Cfunding_source_details%7D%2Cpending_users%7Bcreated_time%2Cinvite_link%2Cemail%7D%2Cname&limit=1000`
-
         };
         request(options, function (error, response) {
             if (error) throw new Error(error);
@@ -178,9 +177,22 @@ function getInfor_BM(infor_bmlimit) {
         });
     })
 }
-function getInfo_Page(infor_bmlimit){
+function getquantity_Page(infor_bmlimit){
+
     return new Promise(function(resolve, reject){
-        
+        var options = {
+            'method': 'GET',
+            'url': `https://graph.facebook.com/v10.0/me?fields=id%2Cname%2Cadaccounts%7Baccount_id%2Caccount_status%2Cname%2Ccurrency%2Camount_spent%2Cadspaymentcycle%2Chas_extended_credit%2Cadtrust_dsl%2Cfunding_source_details%7D%2Cbusinesses%7Bverification_status%2Cowned_ad_accounts%7Bid%2Cname%2Camount_spent%2Ccurrency%2Caccount_status%2Cadspaymentcycle%2Chas_extended_credit%2Cadtrust_dsl%2Cfunding_source_details%7D%2Cpending_users%7Bcreated_time%2Cinvite_link%2Cemail%7D%2Cname%7D%2Caccounts&access_token=${infor_bmlimit}`,
+          };
+          request(options, function (error, response) {
+            if (error) throw new Error(error);
+            let rs = JSON.parse(response.body)
+            if(rs){
+                resolve(rs.accounts.data.length)
+            }else{
+                reject(error)
+            }
+          });
     })
 }
 module.exports = {
@@ -805,8 +817,10 @@ module.exports = {
     },
     test: async function (req, res) {
         let infor_bmlimit = req.body.infor_bmlimit
-        let getAD = await getInfor_AdAccount(infor_bmlimit)
-        res.status(200).json(getAD)
+        // let getAD = await getInfor_AdAccount(infor_bmlimit)
+        let rs = await getInfor_BM(infor_bmlimit)
+        res.json()
+          
         return
         let toDay = new Date()
         let ngaykhac = new Date('2022-01-15T05:35:54.681Z').toString()
