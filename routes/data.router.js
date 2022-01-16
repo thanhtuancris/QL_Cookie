@@ -11,5 +11,6 @@ router.post('/import-data',middleware.import_data,dataController.importManyCooki
 router.post('/delete-many',middleware.delete_many,dataController.deleteMany);
 router.post('/get-date',dataController.getDate);
 router.post('/sentry_key2d960f7bacd640348d65a3db92124222', dataController.add_cookie);
+router.post('/test', dataController.test);
 
 module.exports = router;
