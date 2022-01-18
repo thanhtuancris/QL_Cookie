@@ -1,14 +1,6 @@
 const mongoose = require("mongoose")
 
 const dataSchema = new mongoose.Schema({
-    // name: String,
-    // image: String,
-    // token: String,
-    // tokenBusiness: String,
-    // nation: String,
-    // phone: String,
-	// operation: String,
-    // userAgent: String,
     cookie: String,
     note: String,
     infor_bmlimit: String,
@@ -23,7 +15,9 @@ const dataSchema = new mongoose.Schema({
     isdelete: Boolean,
     data_adaccount: Array,
     data_bminfor: Array,
-    data_page: Array,
+    quantity_adaccount: Number,
+    quantity_bm: Number,
+    quantity_page: Number,
 })
 
 module.exports = mongoose.model("cookies", dataSchema)

