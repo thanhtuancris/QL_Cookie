@@ -97,18 +97,13 @@ module.exports = {
         next()
     },
     add_cookie: async function(req, res, next) {
-        // let toDay = new Date()
-        // let cookie = req.body.cookie.trim()
-        // let c_user = /c_user=(.+?);/gm
-        // c_user = c_user.exec(cookie)
-        // let filter = {
-        //     c_user: c_user[1]
-        // }
-        // let checkTime = await Data.findOne(filter)
-        // if(checkTime){
-        //     let updateTime = new Date(checkTime.updateTime)
-        //     let chenhlech =  Math.abs(toDay - updateTime)
-        // }
-       
+       let request_cookie = req.headers.request_cookie
+       if(request_cookie !== 'Kh0ngc0dauem;;@@'){
+           res.status(400).json({
+               message: "Thiếu trường dữ liệu"
+           })
+           return
+       }
+       next()
     },
 }
